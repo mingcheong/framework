@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/aop    
+        http://www.springframework.org/schema/aop/spring-aop-3.1.xsd    
+        http://www.springframework.org/schema/beans    
+        http://www.springframework.org/schema/beans/spring-beans-3.1.xsd    
+        http://www.springframework.org/schema/context    
+        http://www.springframework.org/schema/context/spring-context-3.1.xsd    
+        http://www.springframework.org/schema/mvc    
+        http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd    
+        http://www.springframework.org/schema/tx    
+        http://www.springframework.org/schema/tx/spring-tx-3.1.xsd"
+	default-autowire="byName">
+
+	<!-- 将隐式地向Spring容器注册AutowiredAnnotationBeanPostProcessor、 CommonAnnotationBeanPostProcessor、 
+		PersistenceAnnotationBeanPostProcessor以及 RequiredAnnotationBeanPostProcessor这4个BeanPostProcessor。 -->
+	<context:annotation-config />
+
+	<!--启用spring @AspectJ支持 -->
+	<aop:aspectj-autoproxy />
+
+	<!-- 将隐式查找服务并注册到SPRING容器中 -->
+	<context:component-scan base-package="com.whl.service,com.whl.dao,com.cigteam.framework.security.dao,com.cigteam.framework.security.service" />
+
+	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:/proxool-jdbc.properties</value>
+			</list>
+		</property>
+	</bean>
+
+	<!--proxool包 proxool-0.9.1.jar,proxool-cglib.jar -->
+	<bean id="dataSource" class="org.logicalcobwebs.proxool.ProxoolDataSource">
+		<property name="driver" value="${proxool.driver}"/>
+		<property name="driverUrl" value="${proxool.url}"/>
+		<property name="user" value="${proxool.username}"/>
+		<property name="password" value="${proxool.password}"/>
+		<property name="alias" value="${proxool.alias}"/>
+<!-- 		<property name="houseKeepingSleepTime" value="90000"/> -->
+	</bean>
+
+	<!-- 实体管理器工厂 -->
+	<bean id="entityManagerFactory"
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="persistenceXmlLocation" value="classpath:/persistence.xml" />
+		<property name="loadTimeWeaver">
+			<bean
+				class="org.springframework.instrument.classloading.InstrumentationLoadTimeWeaver" />
+		</property>
+	</bean>
+
+	<!-- 事务管理 -->
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManagerFactory" />
+	</bean>
+
+	<!-- 启用支持Annotation注解方式的事务管理 -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+</beans>
